@@ -1,8 +1,8 @@
-python==3.11
+python
 streamlit
 pandas
 numpy
-scikit-learn==1.6.1
+scikit-learn
 joblib
 matplotlib
 seaborn
