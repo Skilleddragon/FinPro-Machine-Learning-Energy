@@ -3,13 +3,22 @@ import joblib
 import numpy as np
 import pandas as pd
 import streamlit as st
+import os
+import gdown
 from energy_pipeline import EnergyFeatureEngineer, EnergyPreprocessor
 
 st.set_page_config(page_title='Energy Production Level Prediction', layout='centered')
 
+MODEL_FILE = "energy_level_pipeline.pkl"
+
 @st.cache_resource
 def load_artifacts():
-    model = joblib.load('energy_level_pipeline.pkl')
+    if not os.path.exists(MODEL_FILE):
+        file_id = "GOOGLE_DRIVE_FILE_ID"
+        url = f"https://drive.google.com/uc?id={file_id}"
+        gdown.download(url, MODEL_FILE, quiet=False)
+
+    model = joblib.load(MODEL_FILE)
     metadata = joblib.load('model_metadata.pkl')
     return model, metadata
 
