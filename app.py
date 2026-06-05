@@ -15,7 +15,7 @@ MODEL_FILE = "energy_level_pipeline.pkl"
 def load_artifacts():
     if not os.path.exists(MODEL_FILE):
         file_id = "GOOGLE_DRIVE_FILE_ID"
-        url = f"https://drive.google.com/uc?id={file_id}"
+        url = f"https://drive.google.com/uc?id=1Ati7qCvOA9sKA4J1luEM9BPtfRPk_Qvq"
         gdown.download(url, MODEL_FILE, quiet=False)
 
     model = joblib.load(MODEL_FILE)
