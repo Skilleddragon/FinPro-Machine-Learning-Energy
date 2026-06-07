@@ -146,18 +146,28 @@ input_df = pd.DataFrame({
     'Source': [source]
 })
 
-if st.button('Predict'):
-    start = time.perf_counter()
-    pred = model.predict(input_df)[0]
-    proba = model.predict_proba(input_df)[0]
-    latency_ms = (time.perf_counter() - start) * 1000
+predict_btn = st.button(
+    "⚡ Predict Energy Production Level",
+    use_container_width=True
+)
+
+if predict_btn:
+    with st.spinner("Running prediction..."):
+        start = time.perf_counter()
+        pred = model.predict(input_df)[0]
+        proba = model.predict_proba(input_df)[0]
+        latency_ms = (time.perf_counter() - start) * 1000
 
     classes = model.classes_
     pred_label = label_map[int(pred)]
     confidence = float(np.max(proba))
 
+    st.markdown("---")
+    st.subheader("Prediction Result")
+
     st.success(f'Prediksi Level: **{pred_label}**')
     st.metric('Confidence Score', f'{confidence:.2%}')
+    st.progress(confidence)
     st.metric('Prediction Latency', f'{latency_ms:.2f} ms')
 
     prob_df = pd.DataFrame({
@@ -170,11 +180,28 @@ if st.button('Predict'):
         prob_df.assign(Probability=lambda d: d['Probability'].map(lambda x: f'{x:.2%}')),
         use_container_width=True
     )
-    st.bar_chart(prob_df.set_index('Level'))
+    chart_df = prob_df.set_index("Level")
+
+    st.bar_chart(
+        chart_df,
+        use_container_width=True
+    )
 
     if latency_ms <= 100:
         st.info('Latency memenuhi target < 100 ms pada prediksi ini.')
     else:
         st.warning('Latency prediksi ini > 100 ms. Coba jalankan ulang setelah cache model aktif.')
 
-st.caption('Aplikasi memakai full pipeline: feature engineering, OneHotEncoder, dan Random Forest.')
+st.markdown("---")
+
+st.caption(
+"""
+Built with Streamlit • Scikit-Learn • Random Forest
+
+Pipeline includes:
+- Feature Engineering
+- Missing Value Imputation
+- One-Hot Encoding
+- Random Forest Classification
+"""
+)
