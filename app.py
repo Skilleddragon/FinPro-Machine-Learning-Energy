@@ -9,6 +9,40 @@ from energy_pipeline import EnergyFeatureEngineer, EnergyPreprocessor
 
 st.set_page_config(page_title='Energy Production Level Prediction', layout='centered')
 
+st.markdown("""
+<style>
+.main {
+    padding-top: 1rem;
+}
+
+.pred-card {
+    background-color: #262730;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.metric-card {
+    text-align:center;
+    padding: 0.5rem;
+    border-radius: 10px;
+    background-color: rgba(70,130,180,0.15);
+}
+
+.big-title {
+    text-align:center;
+    font-size:2.3rem;
+    font-weight:700;
+}
+
+.subtitle {
+    text-align:center;
+    color:gray;
+    margin-bottom:2rem;
+}
+</style>
+""", unsafe_allow_html=True)
+
 MODEL_FILE = "energy_level_pipeline.pkl"
 
 @st.cache_resource
@@ -23,6 +57,24 @@ def load_artifacts():
     return model, metadata
 
 model, metadata = load_artifacts()
+
+colA, colB, colC = st.columns(3)
+
+colA.metric(
+    "Accuracy",
+    f"{metadata['random_split_accuracy']:.1%}"
+)
+
+colB.metric(
+    "Macro F1",
+    f"{metadata['random_split_macro_f1']:.1%}"
+)
+
+colC.metric(
+    "Energy Sources",
+    len(metadata['source_values'])
+)
+
 label_map = metadata['label_map']
 source_values = metadata['source_values']
 min_date = pd.to_datetime(metadata['min_date']).date()
@@ -37,8 +89,15 @@ def season_from_month(month: int) -> str:
         return 'Summer'
     return 'Fall'
 
-st.title('⚡ Energy Production Level Prediction')
-st.write('Prediksi level produksi energi terbarukan: **Rendah**, **Sedang**, atau **Tinggi**.')
+st.markdown("""
+<div class='big-title'>
+⚡ Energy Production Level Prediction
+</div>
+
+<div class='subtitle'>
+Renewable Energy Production Classification using Machine Learning
+</div>
+""", unsafe_allow_html=True)
 
 with st.sidebar:
     st.header('Model Info')
@@ -68,13 +127,18 @@ col1.metric('End Hour', end_hour)
 col2.metric('Duration', '1 hour')
 col3.metric('Season', season)
 
-st.write({
-    'Day': day_name,
-    'Month': month_name,
-    'Day of Year': int(day_of_year),
-    'Weekend': bool(is_weekend),
-    'Daytime': bool(is_daytime)
-})
+st.markdown("### Feature Summary")
+
+c1, c2, c3 = st.columns(3)
+
+c1.info(f"📅 Day: {day_name}")
+c2.info(f"🗓 Month: {month_name}")
+c3.info(f"🌞 Daytime: {'Yes' if is_daytime else 'No'}")
+
+c4, c5 = st.columns(2)
+
+c4.info(f"🎯 Day of Year: {day_of_year}")
+c5.info(f"🏖 Weekend: {'Yes' if is_weekend else 'No'}")
 
 input_df = pd.DataFrame({
     'Date': [selected_date.strftime('%Y-%m-%d')],
