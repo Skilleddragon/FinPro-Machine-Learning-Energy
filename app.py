@@ -40,6 +40,18 @@ st.markdown("""
     color:gray;
     margin-bottom:2rem;
 }
+
+.stButton > button {
+    height: 3.2em;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 12px;
+}
+
+.stMetric {
+    border-radius: 12px;
+    padding: 10px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -57,23 +69,6 @@ def load_artifacts():
     return model, metadata
 
 model, metadata = load_artifacts()
-
-colA, colB, colC = st.columns(3)
-
-colA.metric(
-    "Accuracy",
-    f"{metadata['random_split_accuracy']:.1%}"
-)
-
-colB.metric(
-    "Macro F1",
-    f"{metadata['random_split_macro_f1']:.1%}"
-)
-
-colC.metric(
-    "Energy Sources",
-    len(metadata['source_values'])
-)
 
 label_map = metadata['label_map']
 source_values = metadata['source_values']
@@ -99,6 +94,23 @@ Renewable Energy Production Classification using Machine Learning
 </div>
 """, unsafe_allow_html=True)
 
+colA, colB, colC = st.columns(3)
+
+colA.metric(
+    "Accuracy",
+    f"{metadata['random_split_accuracy']:.1%}"
+)
+
+colB.metric(
+    "Macro F1",
+    f"{metadata['random_split_macro_f1']:.1%}"
+)
+
+colC.metric(
+    "Energy Sources",
+    len(metadata['source_values'])
+)
+
 with st.sidebar:
     st.header('Model Info')
     st.write(f"Model: {metadata['model_name']}")
@@ -121,24 +133,26 @@ season = season_from_month(selected_timestamp.month)
 is_weekend = int(day_name in ['Saturday', 'Sunday'])
 is_daytime = int(6 <= start_hour <= 18)
 
-st.markdown('### Derived Features')
-col1, col2, col3 = st.columns(3)
-col1.metric('End Hour', end_hour)
-col2.metric('Duration', '1 hour')
-col3.metric('Season', season)
+with st.expander("📊 View Derived Features"):
 
-st.markdown("### Feature Summary")
+    col1, col2, col3 = st.columns(3)
 
-c1, c2, c3 = st.columns(3)
+    col1.metric('End Hour', end_hour)
+    col2.metric('Duration', '1 hour')
+    col3.metric('Season', season)
 
-c1.info(f"📅 Day: {day_name}")
-c2.info(f"🗓 Month: {month_name}")
-c3.info(f"🌞 Daytime: {'Yes' if is_daytime else 'No'}")
+    st.markdown("### Feature Summary")
 
-c4, c5 = st.columns(2)
+    c1, c2, c3 = st.columns(3)
 
-c4.info(f"🎯 Day of Year: {day_of_year}")
-c5.info(f"🏖 Weekend: {'Yes' if is_weekend else 'No'}")
+    c1.info(f"📅 Day: {day_name}")
+    c2.info(f"🗓 Month: {month_name}")
+    c3.info(f"🌞 Daytime: {'Yes' if is_daytime else 'No'}")
+
+    c4, c5 = st.columns(2)
+
+    c4.info(f"🎯 Day of Year: {day_of_year}")
+    c5.info(f"🏖 Weekend: {'Yes' if is_weekend else 'No'}")
 
 input_df = pd.DataFrame({
     'Date': [selected_date.strftime('%Y-%m-%d')],
@@ -165,10 +179,32 @@ if predict_btn:
     st.markdown("---")
     st.subheader("Prediction Result")
 
-    st.success(f'Prediksi Level: **{pred_label}**')
-    st.metric('Confidence Score', f'{confidence:.2%}')
+    if pred_label == ["High", "Tinggi"]:
+        emoji = "🟢"
+    elif pred_label == ["Medium", "Sedang"]:
+        emoji = "🟡"
+    else:
+        emoji = "🔴"
+
+    st.markdown(
+        f"""
+        ## {emoji} Predicted Production Level
+        # {pred_label}
+        """
+    )
+    metric1, metric2 = st.columns(2)
+
+    metric1.metric(
+        "Confidence",
+        f"{confidence:.2%}"
+    )
+
+    metric2.metric(
+        "Latency",
+        f"{latency_ms:.2f} ms"
+    )
+
     st.progress(confidence)
-    st.metric('Prediction Latency', f'{latency_ms:.2f} ms')
 
     prob_df = pd.DataFrame({
         'Level': [label_map[int(cls)] for cls in classes],
@@ -176,32 +212,56 @@ if predict_btn:
     })
 
     st.markdown('### Class Probability')
-    st.dataframe(
-        prob_df.assign(Probability=lambda d: d['Probability'].map(lambda x: f'{x:.2%}')),
-        use_container_width=True
-    )
     chart_df = prob_df.set_index("Level")
-
     st.bar_chart(
         chart_df,
         use_container_width=True
     )
+
+    if confidence > 0.8:
+        st.success(
+            "Model shows strong confidence for this prediction."
+        )
+    elif confidence > 0.6:
+        st.info(
+            "Model confidence is moderate."
+        )
+    else:
+        st.warning(
+            "Prediction confidence is relatively low."
+        )
 
     if latency_ms <= 100:
         st.info('Latency memenuhi target < 100 ms pada prediksi ini.')
     else:
         st.warning('Latency prediksi ini > 100 ms. Coba jalankan ulang setelah cache model aktif.')
 
-st.markdown("---")
+with st.sidebar:
+    st.markdown("---")
+    st.markdown("""
+    ### Dataset Coverage
 
-st.caption(
-"""
-Built with Streamlit • Scikit-Learn • Random Forest
+    Available:
+    - Solar
+    - Wind
 
-Pipeline includes:
-- Feature Engineering
-- Missing Value Imputation
-- One-Hot Encoding
-- Random Forest Classification
-"""
-)
+    Prediction Horizon:
+    - Hourly Production
+
+    Target Classes:
+    - Low
+    - Medium
+    - High
+    """)
+
+    st.caption(
+    """
+    Built with Streamlit • Scikit-Learn • Random Forest
+
+    Pipeline includes:
+    - Feature Engineering
+    - Missing Value Imputation
+    - One-Hot Encoding
+    - Random Forest Classification
+    """
+    )
