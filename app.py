@@ -179,9 +179,9 @@ if predict_btn:
     st.markdown("---")
     st.subheader("Prediction Result")
 
-    if pred_label == ["High", "Tinggi"]:
+    if pred_label in ["High", "Tinggi"]:
         emoji = "🟢"
-    elif pred_label == ["Medium", "Sedang"]:
+    elif pred_label in ["Medium", "Sedang"]:
         emoji = "🟡"
     else:
         emoji = "🔴"
