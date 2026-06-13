@@ -61,7 +61,7 @@ def load_metadata():
     return joblib.load("model_metadata.pkl")
 
 model = load_model()
-metadata = joblib.load("model_metadata.pkl")
+metadata = load_metadata()
 
 label_map = {
     0:'Low',
@@ -117,6 +117,11 @@ with st.sidebar:
     st.write(f"Test Accuracy: {metadata['accuracy']:.2%}")
     st.write(f"Macro F1: {metadata['macro_f1']:.2%}")
     st.write(f"Validation: {metadata['chronological_split']}")
+
+    st.caption(
+        "Scores obtained using chronological split "
+        "(train 2021–2024, test 2025)."
+    )
 
 st.subheader('User Input')
 source = st.selectbox('Energy Source', source_values)
