@@ -150,6 +150,34 @@ colC.metric(
 )
 
 with st.sidebar:
+    st.header("ℹ️ About This App")
+
+    st.write(
+        """
+        This application predicts renewable energy production levels
+        based on temporal information and energy source type.
+
+        Users can select:
+        - Energy Source
+        - Date
+        - Start Hour
+
+        The model then classifies the expected production level into:
+        - Low
+        - Medium
+        - High
+        """
+    )
+
+    st.caption(
+        """
+        Educational machine learning project using
+        chronological validation on renewable energy data.
+        """
+    )
+
+    st.markdown("---")
+
     st.header('Model Info')
 
     st.write(f"Model: {metadata['model_name']}")
