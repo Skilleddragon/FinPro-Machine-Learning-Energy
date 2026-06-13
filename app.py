@@ -1,4 +1,3 @@
-import time
 import joblib
 import numpy as np
 import pandas as pd
@@ -200,7 +199,6 @@ predict_btn = st.button(
 
 if predict_btn:
     with st.spinner("Running prediction..."):
-        start = time.perf_counter()
         pred = model.predict(input_df)[0]
         proba = model.predict_proba(input_df)[0]
 
@@ -224,9 +222,8 @@ if predict_btn:
         # {pred_label}
         """
     )
-    metric1 = st.columns(1)
 
-    metric1.metric(
+    st.metric(
         "Confidence",
         f"{confidence:.2%}"
     )
