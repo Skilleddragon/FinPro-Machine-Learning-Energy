@@ -203,7 +203,6 @@ if predict_btn:
         start = time.perf_counter()
         pred = model.predict(input_df)[0]
         proba = model.predict_proba(input_df)[0]
-        latency_ms = (time.perf_counter() - start) * 1000
 
     classes = model.classes_
     pred_label = label_map[int(pred)]
@@ -225,16 +224,11 @@ if predict_btn:
         # {pred_label}
         """
     )
-    metric1, metric2 = st.columns(2)
+    metric1 = st.columns(1)
 
     metric1.metric(
         "Confidence",
         f"{confidence:.2%}"
-    )
-
-    metric2.metric(
-        "Latency",
-        f"{latency_ms:.2f} ms"
     )
 
     st.progress(confidence)
@@ -263,11 +257,6 @@ if predict_btn:
         st.warning(
             "Prediction confidence is relatively low."
         )
-
-    if latency_ms <= 100:
-        st.info('Latency memenuhi target < 100 ms pada prediksi ini.')
-    else:
-        st.warning('Latency prediksi ini > 100 ms. Coba jalankan ulang setelah cache model aktif.')
 
 with st.sidebar:
     st.markdown("---")
