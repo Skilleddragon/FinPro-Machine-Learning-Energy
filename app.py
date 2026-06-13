@@ -83,6 +83,46 @@ def season_from_month(month: int) -> str:
         return 'Summer'
     return 'Fall'
 
+def create_features(date, start_hour, source):
+
+    date = pd.to_datetime(date)
+
+    features = pd.DataFrame({
+        'Hour_Sin': [
+            np.sin(2*np.pi*start_hour/24)
+        ],
+
+        'Hour_Cos': [
+            np.cos(2*np.pi*start_hour/24)
+        ],
+
+        'Day_Of_Year_Sin': [
+            np.sin(2*np.pi*date.dayofyear/365)
+        ],
+
+        'Day_Of_Year_Cos': [
+            np.cos(2*np.pi*date.dayofyear/365)
+        ],
+
+        'Month_Number': [
+            date.month
+        ],
+
+        'Day_Of_Week': [
+            date.dayofweek
+        ],
+
+        'Season': [
+            season_from_month(date.month)
+        ],
+
+        'Source': [
+            source
+        ]
+    })
+
+    return features
+
 st.markdown("""
 <div class='big-title'>
 ⚡ Energy Production Level Prediction
@@ -147,11 +187,11 @@ with st.expander("📊 View Derived Features"):
     c1.info(f"🎯 Day of Year: {day_of_year}")
     c2.info(f"⏰ Start Hour: {start_hour}")
 
-input_df = pd.DataFrame({
-    'Date': [selected_date.strftime('%Y-%m-%d')],
-    'Start_Hour': [start_hour],
-    'Source': [source]
-})
+input_df = create_features(
+    selected_date,
+    start_hour,
+    source
+)
 
 predict_btn = st.button(
     "⚡ Predict Energy Production Level",
