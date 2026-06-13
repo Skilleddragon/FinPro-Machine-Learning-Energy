@@ -3,8 +3,6 @@ import joblib
 import numpy as np
 import pandas as pd
 import streamlit as st
-import os
-import gdown
 
 st.set_page_config(page_title='Energy Production Level Prediction', layout='centered')
 
@@ -54,13 +52,16 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-MODEL_FILE = "energy_level_pipeline.pkl"
-
 @st.cache_resource
 def load_model():
-    return joblib.load(MODEL_FILE)
+    return joblib.load("energy_level_pipeline.pkl")
+
+@st.cache_resource
+def load_metadata():
+    return joblib.load("model_metadata.pkl")
 
 model = load_model()
+metadata = joblib.load("model_metadata.pkl")
 
 label_map = {
     0:'Low',
@@ -69,6 +70,9 @@ label_map = {
 }
 
 source_values = metadata['source_values']
+
+min_date = pd.to_datetime(metadata['min_date']).date()
+max_date = pd.to_datetime(metadata['max_date']).date()
 
 def season_from_month(month: int) -> str:
     if month in [12, 1, 2]:
@@ -108,8 +112,11 @@ colC.metric(
 
 with st.sidebar:
     st.header('Model Info')
+
+    st.write(f"Model: {metadata['model_name']}")
     st.write(f"Test Accuracy: {metadata['accuracy']:.2%}")
     st.write(f"Macro F1: {metadata['macro_f1']:.2%}")
+    st.write(f"Validation: {metadata['chronological_split']}")
 
 st.subheader('User Input')
 source = st.selectbox('Energy Source', source_values)
@@ -117,34 +124,23 @@ selected_date = st.date_input('Date', value=max_date, min_value=min_date, max_va
 start_hour = st.slider('Start Hour', min_value=0, max_value=23, value=12, step=1)
 
 selected_timestamp = pd.to_datetime(selected_date)
-end_hour = (start_hour + 1) % 24
 day_name = selected_timestamp.day_name()
 month_name = selected_timestamp.month_name()
 day_of_year = selected_timestamp.dayofyear
 season = season_from_month(selected_timestamp.month)
-is_weekend = int(day_name in ['Saturday', 'Sunday'])
-is_daytime = int(6 <= start_hour <= 18)
 
 with st.expander("📊 View Derived Features"):
-
     col1, col2, col3 = st.columns(3)
 
-    col1.metric('End Hour', end_hour)
-    col2.metric('Duration', '1 hour')
-    col3.metric('Season', season)
+    col1.metric('Day',day_name)
+    col2.metric('Month',month_name)
+    col3.metric('Season',season)
 
-    st.markdown("### Feature Summary")
+    st.markdown("### Temporal Feature Summary")
 
-    c1, c2, c3 = st.columns(3)
-
-    c1.info(f"📅 Day: {day_name}")
-    c2.info(f"🗓 Month: {month_name}")
-    c3.info(f"🌞 Daytime: {'Yes' if is_daytime else 'No'}")
-
-    c4, c5 = st.columns(2)
-
-    c4.info(f"🎯 Day of Year: {day_of_year}")
-    c5.info(f"🏖 Weekend: {'Yes' if is_weekend else 'No'}")
+    c1, c2 = st.columns(2)
+    c1.info(f"🎯 Day of Year: {day_of_year}")
+    c2.info(f"⏰ Start Hour: {start_hour}")
 
 input_df = pd.DataFrame({
     'Date': [selected_date.strftime('%Y-%m-%d')],
@@ -171,9 +167,9 @@ if predict_btn:
     st.markdown("---")
     st.subheader("Prediction Result")
 
-    if pred_label in ["High", "Tinggi"]:
+    if pred_label == "High":
         emoji = "🟢"
-    elif pred_label in ["Medium", "Sedang"]:
+    elif pred_label == "Medium":
         emoji = "🟡"
     else:
         emoji = "🔴"
@@ -237,8 +233,8 @@ with st.sidebar:
     - Solar
     - Wind
 
-    Prediction Horizon:
-    - Hourly Production
+    Prediction Task:
+    - Hourly Production Level Classification
 
     Target Classes:
     - Low
@@ -252,8 +248,8 @@ with st.sidebar:
 
     Pipeline includes:
     - Temporal Feature Engineering
-    - Feature Scaling
-    - One-Hot Encoding
+    - Numerical Feature Scaling
+    - Categorical Feature Encoding
     - Logistic Regression Classification
     """
     )
