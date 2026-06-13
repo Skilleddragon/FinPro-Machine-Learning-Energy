@@ -5,7 +5,6 @@ import pandas as pd
 import streamlit as st
 import os
 import gdown
-from energy_pipeline import EnergyFeatureEngineer, EnergyPreprocessor
 
 st.set_page_config(page_title='Energy Production Level Prediction', layout='centered')
 
@@ -58,22 +57,18 @@ st.markdown("""
 MODEL_FILE = "energy_level_pipeline.pkl"
 
 @st.cache_resource
-def load_artifacts():
-    if not os.path.exists(MODEL_FILE):
-        file_id = "GOOGLE_DRIVE_FILE_ID"
-        url = f"https://drive.google.com/uc?id=1Ati7qCvOA9sKA4J1luEM9BPtfRPk_Qvq"
-        gdown.download(url, MODEL_FILE, quiet=False)
+def load_model():
+    return joblib.load(MODEL_FILE)
 
-    model = joblib.load(MODEL_FILE)
-    metadata = joblib.load('model_metadata.pkl')
-    return model, metadata
+model = load_model()
 
-model, metadata = load_artifacts()
+label_map = {
+    0:'Low',
+    1:'Medium',
+    2:'High'
+}
 
-label_map = metadata['label_map']
 source_values = metadata['source_values']
-min_date = pd.to_datetime(metadata['min_date']).date()
-max_date = pd.to_datetime(metadata['max_date']).date()
 
 def season_from_month(month: int) -> str:
     if month in [12, 1, 2]:
@@ -98,12 +93,12 @@ colA, colB, colC = st.columns(3)
 
 colA.metric(
     "Accuracy",
-    f"{metadata['random_split_accuracy']:.1%}"
+    f"{metadata['accuracy']:.1%}"
 )
 
 colB.metric(
     "Macro F1",
-    f"{metadata['random_split_macro_f1']:.1%}"
+    f"{metadata['macro_f1']:.1%}"
 )
 
 colC.metric(
@@ -113,11 +108,8 @@ colC.metric(
 
 with st.sidebar:
     st.header('Model Info')
-    st.write(f"Model: {metadata['model_name']}")
-    st.write(f"Random split accuracy: {metadata['random_split_accuracy']:.2%}")
-    st.write(f"Random split macro F1: {metadata['random_split_macro_f1']:.2%}")
-    st.write(f"Chronological accuracy: {metadata['chronological_accuracy']:.2%}")
-    st.caption('Chronological score adalah catatan limitation untuk data time-series.')
+    st.write(f"Test Accuracy: {metadata['accuracy']:.2%}")
+    st.write(f"Macro F1: {metadata['macro_f1']:.2%}")
 
 st.subheader('User Input')
 source = st.selectbox('Energy Source', source_values)
@@ -256,12 +248,12 @@ with st.sidebar:
 
     st.caption(
     """
-    Built with Streamlit • Scikit-Learn • Random Forest
+    Built with Streamlit • Scikit-Learn • Logistic Regression
 
     Pipeline includes:
-    - Feature Engineering
-    - Missing Value Imputation
+    - Temporal Feature Engineering
+    - Feature Scaling
     - One-Hot Encoding
-    - Random Forest Classification
+    - Logistic Regression Classification
     """
     )
