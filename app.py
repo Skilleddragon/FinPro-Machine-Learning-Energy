@@ -7,9 +7,7 @@ st.set_page_config(page_title='Energy Production Level Prediction', layout='cent
 
 st.markdown("""
 <style>
-.main {
-    padding-top: 1rem;
-}
+.main {padding-top: 1rem;}
 
 .pred-card {
     background-color: #262730;
@@ -74,52 +72,23 @@ min_date = pd.to_datetime(metadata['min_date']).date()
 max_date = pd.to_datetime(metadata['max_date']).date()
 
 def season_from_month(month: int) -> str:
-    if month in [12, 1, 2]:
-        return 'Winter'
-    if month in [3, 4, 5]:
-        return 'Spring'
-    if month in [6, 7, 8]:
-        return 'Summer'
+    if month in [12, 1, 2]: return 'Winter'
+    if month in [3, 4, 5]: return 'Spring'
+    if month in [6, 7, 8]: return 'Summer'
     return 'Fall'
 
 def create_features(date, start_hour, source):
-
     date = pd.to_datetime(date)
-
     features = pd.DataFrame({
-        'Hour_Sin': [
-            np.sin(2*np.pi*start_hour/24)
-        ],
-
-        'Hour_Cos': [
-            np.cos(2*np.pi*start_hour/24)
-        ],
-
-        'Day_Of_Year_Sin': [
-            np.sin(2*np.pi*date.dayofyear/365)
-        ],
-
-        'Day_Of_Year_Cos': [
-            np.cos(2*np.pi*date.dayofyear/365)
-        ],
-
-        'Month_Number': [
-            date.month
-        ],
-
-        'Day_Of_Week': [
-            date.dayofweek
-        ],
-
-        'Season': [
-            season_from_month(date.month)
-        ],
-
-        'Source': [
-            source
-        ]
+        'Hour_Sin': [np.sin(2*np.pi*start_hour/24)],
+        'Hour_Cos': [np.cos(2*np.pi*start_hour/24)],
+        'Day_Of_Year_Sin': [np.sin(2*np.pi*date.dayofyear/365)],
+        'Day_Of_Year_Cos': [np.cos(2*np.pi*date.dayofyear/365)],
+        'Month_Number': [date.month],
+        'Day_Of_Week': [date.dayofweek],
+        'Season': [season_from_month(date.month)],
+        'Source': [source]
     })
-
     return features
 
 st.markdown("""
@@ -134,20 +103,9 @@ Renewable Energy Production Classification using Machine Learning
 
 colA, colB, colC = st.columns(3)
 
-colA.metric(
-    "Accuracy",
-    f"{metadata['accuracy']:.1%}"
-)
-
-colB.metric(
-    "Macro F1",
-    f"{metadata['macro_f1']:.1%}"
-)
-
-colC.metric(
-    "Energy Sources",
-    len(metadata['source_values'])
-)
+colA.metric("Accuracy",f"{metadata['accuracy']:.1%}")
+colB.metric("Macro F1",f"{metadata['macro_f1']:.1%}")
+colC.metric("Energy Sources",len(metadata['source_values']))
 
 with st.sidebar:
     st.header("ℹ️ About This App")
@@ -214,11 +172,7 @@ with st.expander("📊 View Derived Features"):
     c1.info(f"🎯 Day of Year: {day_of_year}")
     c2.info(f"⏰ Start Hour: {start_hour}")
 
-input_df = create_features(
-    selected_date,
-    start_hour,
-    source
-)
+input_df = create_features(selected_date,start_hour,source)
 
 predict_btn = st.button(
     "⚡ Predict Energy Production Level",
@@ -237,12 +191,9 @@ if predict_btn:
     st.markdown("---")
     st.subheader("Prediction Result")
 
-    if pred_label == "High":
-        emoji = "🟢"
-    elif pred_label == "Medium":
-        emoji = "🟡"
-    else:
-        emoji = "🔴"
+    if pred_label == "High": emoji = "🟢"
+    elif pred_label == "Medium": emoji = "🟡"
+    else: emoji = "🔴"
 
     st.markdown(
         f"""
@@ -251,10 +202,7 @@ if predict_btn:
         """
     )
 
-    st.metric(
-        "Confidence",
-        f"{confidence:.2%}"
-    )
+    st.metric("Confidence", f"{confidence:.2%}")
 
     st.progress(confidence)
 
@@ -270,18 +218,9 @@ if predict_btn:
         use_container_width=True
     )
 
-    if confidence > 0.8:
-        st.success(
-            "Model shows strong confidence for this prediction."
-        )
-    elif confidence > 0.6:
-        st.info(
-            "Model confidence is moderate."
-        )
-    else:
-        st.warning(
-            "Prediction confidence is relatively low."
-        )
+    if confidence > 0.8: st.success("Model shows strong confidence for this prediction.")
+    elif confidence > 0.6: st.info("Model confidence is moderate.")
+    else: st.warning("Prediction confidence is relatively low.")
 
 with st.sidebar:
     st.markdown("---")
